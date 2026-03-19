@@ -1,0 +1,11 @@
+# domowe
+# zadanie 1: zadeklaruj df o nazwie df_a_b, ktory bedzie zawiwrał jedynie
+# wiersze z grupy etnicznej a i b
+
+# 2: posortuj dane po rasie i po edukacji rodziców
+
+# 3: dodaj kolumnę 'weighted score', gdzie będzie ważona w nastepujący spsób:
+# matematyka x 0,35
+# czytanie x 0,30
+# pisanie x 0,35
+# podpowiedź: w Pythaonie wartości po przecisnku sa po kropce tj. 3,14 -> 3.14

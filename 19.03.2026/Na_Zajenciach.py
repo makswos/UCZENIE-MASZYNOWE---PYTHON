@@ -10,6 +10,9 @@ df = pd.read_csv(file_path)
 # print(df.shape)
 # print(df.columns)
 
+# Print the column names to check for typos
+print(df.columns)
+
 # Policz liczbe osob z każdej grupy rasowej:
 # print(df['gender'].value_counts())
 
@@ -25,6 +28,22 @@ df = pd.read_csv(file_path)
 # print(df[(df['gender'] == "female") & (df['writing score'] > 80)])
 
 
-# Zadanie 3
-# Znajdź wszystkich ktorzy napisali test z pisan ia na powyżej 90 lub test z czytania na powyżej 90:
-print(df[(df['writing score'] > 90) | (df['reading score'] > 90)])
+# print(df['parental level of education'].value_counts())
+
+# print(df['parental level of education'].isin(["master's degree", "bachelor's degree"]))
+
+# print(df[df['parental level of education'].isin(["master's degree", "bachelor's degree"])])
+
+# df.groupby('gender')['reading score'].mean()
+
+# zadanie 1: policz średnią w podziele na 'gender', ale ze wszystkich trzech testów
+# w jednej tabeli
+
+# df.groupby('gender')[['reading score', 'math score', 'writing score']].mean()
+# df['total score'] = df['reading score'] + df['math score'] + df['writing score']
+# print(df['total score'])
+
+# print(df[['math score','reading score','writing score']].corr())
+
+df_female = df[df['gender'] == "female"]
+print(df_female)

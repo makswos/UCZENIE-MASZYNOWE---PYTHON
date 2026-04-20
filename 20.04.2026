@@ -1,0 +1,97 @@
+import pandas as pd
+import numpy as np
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler, LabelEncoder
+from sklearn.ensemble import RandomForestClassifier  # Zmiana modelu
+from sklearn.metrics import classification_report, accuracy_score, confusion_matrix, ConfusionMatrixDisplay
+import kagglehub
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+path = kagglehub.dataset_download("aadigupta1601/f1-strategy-dataset-pit-stop-prediction")
+df = pd.read_csv(path + "/f1_strategy_dataset_v4.csv")
+
+features = ['LapNumber', 'Stint', 'TyreLife', 'Position', 'Cumulative_Degradation', 
+            'RaceProgress', 'Compound', 'LapTime_Delta'] 
+target = 'PitNextLap'
+
+data = df[features + [target]].dropna()
+
+le = LabelEncoder()
+data['Compound'] = le.fit_transform(data['Compound'])
+
+X = data[features]
+y = data[target]
+
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+scaler = StandardScaler()
+X_train_scaled = scaler.fit_transform(X_train)
+X_test_scaled = scaler.transform(X_test)
+
+rf = RandomForestClassifier(n_estimators=100, max_depth=10, class_weight='balanced_subsample', random_state=42)
+rf.fit(X_train_scaled, y_train)
+
+y_probs = rf.predict_proba(X_test_scaled)[:, 1]
+y_pred = (y_probs > 0.6).astype(int) 
+
+print(f"Dokładność po dopracowaniu: {accuracy_score(y_test, y_pred):.2f}")
+print("\nRaport klasyfikacji:\n", classification_report(y_test, y_pred))
+
+importance = pd.Series(rf.feature_importances_, index=features).sort_values(ascending=False)
+plt.figure(figsize=(10, 6))
+sns.barplot(x=importance, y=importance.index, hue=importance.index, palette='magma', legend=False)
+plt.title("Co teraz jest najważniejsze dla AI?")
+plt.show()
+
+cm = confusion_matrix(y_test, y_pred)
+disp = ConfusionMatrixDisplay(confusion_matrix=cm, display_labels=['Zostaje (0)', 'Pit-Stop (1)'])
+disp.plot(cmap='Blues')
+plt.title("Nowa Macierz Pomyłek (Random Forest)")
+plt.show()
+
+import matplotlib.pyplot as plt
+import seaborn as sns
+from sklearn.metrics import precision_recall_curve
+
+# Ustawienia stylu
+sns.set_theme(style="whitegrid")
+
+# =========================================================
+# WYKRES 1: Ważność Cech (Feature Importance)
+# =========================================================
+# Ten wykres pokazuje "mózg" Twojego lasu losowego.
+plt.figure(figsize=(10, 6))
+importance = pd.Series(rf.feature_importances_, index=features).sort_values(ascending=True)
+
+# Naprawiony błąd palette zgodnie z ostrzeżeniem
+sns.barplot(x=importance, y=importance.index, hue=importance.index, palette='magma', legend=False)
+
+plt.title('Które dane najbardziej interesują Twoje AI?', fontsize=15)
+plt.xlabel('Względna ważność (suma = 1.0)', fontsize=12)
+plt.ylabel('Cechy (Features)', fontsize=12)
+plt.tight_layout()
+plt.show()
+
+# =========================================================
+# WYKRES 2: Krzywa Precision-Recall
+# =========================================================
+# Ten wykres tłumaczy, dlaczego ustawiliśmy próg na 0.6.
+# Pokazuje kompromis: im więcej pit-stopów chcemy "wyłapać", tym częściej będziemy się mylić.
+
+precision, recall, thresholds = precision_recall_curve(y_test, y_probs)
+
+plt.figure(figsize=(10, 6))
+plt.plot(thresholds, precision[:-1], 'r--', label='Precyzja (Unikanie błędnych alarmów)')
+plt.plot(thresholds, recall[:-1], 'b-', label='Czułość (Wyłapywanie wszystkich pit-stopów)')
+
+# Zaznaczamy Twój próg 0.6
+plt.axvline(x=0.6, color='black', linestyle=':', label='Twój wybrany próg (0.6)')
+
+plt.title('Optymalizacja progu decyzji AI', fontsize=15)
+plt.xlabel('Próg pewności modelu (Threshold)', fontsize=12)
+plt.ylabel('Skuteczność (0.0 - 1.0)', fontsize=12)
+plt.legend()
+plt.grid(True, alpha=0.3)
+plt.tight_layout()
+plt.show()
